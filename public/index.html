@@ -1,46 +1,263 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Tuyển Dụng - dtc245200861</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
-        h1 { color: #333; }
-        #status { margin-top: 20px; font-weight: bold; color: green; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-        button:hover { background: #0056b3; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Tuyển Dụng - Job Board | SV: dtc245200861</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .hero-banner { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 40px 0; margin-bottom: 30px; }
+    .job-card { border: none; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; margin-bottom: 20px; }
+    .job-card:hover { transform: translateY(-3px); }
+    .badge-salary { background-color: #e0f2fe; color: #0369a1; font-weight: 600; }
+    .status-badge { font-size: 0.9rem; padding: 6px 14px; border-radius: 20px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hệ Thống Quản Lý Tin Tuyển Dụng</h1>
-        <p>Sinh viên thực hiện: <strong>dtc245200861</strong></p>
-        <button onclick="checkStatus()">Kiểm tra kết nối Database</button>
-        <p id="status"></p>
+
+  <!-- Header / Hero Banner -->
+  <div class="hero-banner">
+    <div class="container text-center">
+      <h1 class="fw-bold"><i class="fa-solid fa-briefcase me-2"></i>CỔNG THÔNG TIN TUYỂN DỤNG & VIỆC LÀM</h1>
+      <p class="lead mb-2">Đề tài: Triển khai & Quản trị Hệ thống Phần mềm - Đề số 33</p>
+      <div class="d-inline-flex align-items-center bg-white text-dark px-3 py-1 rounded-pill shadow-sm">
+        <i class="fa-solid fa-user-graduate text-primary me-2"></i>
+        <span>Sinh viên thực hiện: <strong>dtc245200861</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mb-5">
+    <!-- Trạng thái Hệ thống & Nút thao tác -->
+    <div class="row align-items-center mb-4">
+      <div class="col-md-6 mb-2 mb-md-0">
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-primary btn-sm" onclick="checkStatus()">
+            <i class="fa-solid fa-rotate me-1"></i> Kiểm tra kết nối DB
+          </button>
+          <span id="systemStatus" class="badge bg-secondary status-badge">Chờ kiểm tra kết nối...</span>
+        </div>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#postJobModal">
+          <i class="fa-solid fa-plus me-1"></i> Đăng Tin Tuyển Dụng
+        </button>
+        <a href="http://localhost:8080" target="_blank" class="btn btn-outline-secondary ms-2">
+          <i class="fa-solid fa-database me-1"></i> Quản Trị phpMyAdmin
+        </a>
+      </div>
     </div>
 
-    <script>
-        function checkStatus() {
-            document.getElementById('status').innerText = "Đang kiểm tra...";
-            document.getElementById('status').style.color = "black";
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status.includes('thành công')) {
-                        document.getElementById('status').style.color = "green";
-                        document.getElementById('status').innerText = "Thành công: " + data.status;
-                    } else {
-                        document.getElementById('status').style.color = "red";
-                        document.getElementById('status').innerText = "Lỗi: " + data.error;
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('status').style.color = "red";
-                    document.getElementById('status').innerText = "Lỗi kết nối API tới server.";
-                });
+    <!-- Danh sách việc làm -->
+    <div class="row">
+      <div class="col-12">
+        <h3 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i>Việc Làm Mới Nhất</h3>
+        <div id="jobList" class="row">
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Đang tải danh sách công việc...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Đăng Tin -->
+  <div class="modal fade" id="postJobModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-bullhorn text-primary me-2"></i>Đăng Tin Tuyển Dụng Mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="postJobForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Vị trí công việc *</label>
+              <input type="text" class="form-control" name="title" required placeholder="Ví dụ: Backend Developer Node.js">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tên công ty *</label>
+              <input type="text" class="form-control" name="company" required placeholder="Ví dụ: Viettel, FPT...">
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Địa điểm làm việc</label>
+                <input type="text" class="form-control" name="location" placeholder="Ví dụ: Hà Nội, Remote">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mức lương</label>
+                <input type="text" class="form-control" name="salary" placeholder="Ví dụ: 20 - 30 Triệu">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mô tả công việc</label>
+              <textarea class="form-control" name="description" rows="3" placeholder="Yêu cầu kỹ năng, kinh nghiệm..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-primary">Đăng tin ngay</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ứng Tuyển -->
+  <div class="modal fade" id="applyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-arrow-up text-primary me-2"></i>Nộp Hồ Sơ Ứng Tuyển (CV)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="applyForm">
+          <input type="hidden" name="job_id" id="applyJobId">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Họ và tên ứng viên *</label>
+              <input type="text" class="form-control" name="applicant_name" required placeholder="Nguyễn Văn A">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email liên hệ *</label>
+              <input type="email" class="form-control" name="email" required placeholder="email@gmail.com">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Link CV (Google Drive, LinkedIn...) *</label>
+              <input type="url" class="form-control" name="cv_link" required placeholder="https://drive.google.com/...">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Gửi hồ sơ</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-muted border-top mt-5 bg-white">
+    <p class="mb-0">Dự án Đồ án Thực hành - SV: <strong>dtc245200861</strong> | Triển khai trên Docker Compose</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    async function checkStatus() {
+      const badge = document.getElementById('systemStatus');
+      badge.className = 'badge bg-warning text-dark status-badge';
+      badge.innerText = 'Đang kiểm tra...';
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.status && data.status.includes('thành công')) {
+          badge.className = 'badge bg-success status-badge';
+          badge.innerText = '✓ ' + data.status + ' (' + new Date(data.serverTime).toLocaleTimeString() + ')';
+        } else {
+          badge.className = 'badge bg-danger status-badge';
+          badge.innerText = '✗ Lỗi: ' + (data.error || 'Mất kết nối DB');
         }
-    </script>
+      } catch (err) {
+        badge.className = 'badge bg-danger status-badge';
+        badge.innerText = '✗ Không kết nối được API';
+      }
+    }
+
+    async function loadJobs() {
+      const container = document.getElementById('jobList');
+      try {
+        const res = await fetch('/api/jobs');
+        const jobs = await res.json();
+        if (!jobs || jobs.length === 0) {
+          container.innerHTML = '<div class="col-12 text-center text-muted">Chưa có tin tuyển dụng nào. Hãy đăng tin đầu tiên!</div>';
+          return;
+        }
+        container.innerHTML = jobs.map(job => `
+          <div class="col-md-6 col-lg-4">
+            <div class="card job-card h-100 p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-primary text-white"><i class="fa-solid fa-building me-1"></i>${escapeHtml(job.company)}</span>
+                <span class="badge badge-salary">${escapeHtml(job.salary || 'Thỏa thuận')}</span>
+              </div>
+              <h5 class="fw-bold text-dark mt-2">${escapeHtml(job.title)}</h5>
+              <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-1"></i>${escapeHtml(job.location || 'Toàn quốc')}</p>
+              <p class="card-text text-secondary small flex-grow-1">${escapeHtml(job.description || '')}</p>
+              <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
+                <small class="text-muted">${new Date(job.created_at).toLocaleDateString('vi-VN')}</small>
+                <button class="btn btn-sm btn-outline-primary" onclick="openApplyModal(${job.id})">
+                  <i class="fa-solid fa-paper-plane me-1"></i> Nộp CV
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<div class="col-12 text-danger text-center">Lỗi tải danh sách việc làm</div>';
+      }
+    }
+
+    function openApplyModal(jobId) {
+      document.getElementById('applyJobId').value = jobId;
+      new bootstrap.Modal(document.getElementById('applyModal')).show();
+    }
+
+    document.getElementById('postJobForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch('/api/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          bootstrap.Modal.getInstance(document.getElementById('postJobModal')).hide();
+          e.target.reset();
+          loadJobs();
+        } else {
+          alert('Lỗi khi đăng tin!');
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    });
+
+    document.getElementById('applyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch('/api/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert('Chúc mừng! Bạn đã nộp CV ứng tuyển thành công.');
+          bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+          e.target.reset();
+        } else {
+          alert('Lỗi: ' + (result.error || 'Không thể nộp CV'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    });
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Tự động kiểm tra và tải dữ liệu khi trang tải xong
+    window.addEventListener('DOMContentLoaded', () => {
+      checkStatus();
+      loadJobs();
+    });
+  </script>
 </body>
 </html>
