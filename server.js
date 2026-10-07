@@ -29,13 +29,14 @@ async function initDB() {
       const conn = await pool.getConnection();
       console.log('Connected to MySQL successfully!');
 
-      // Tạo bảng users
+      // Tạo bảng users (để trống cho người dùng tự đăng ký)
       await conn.query(`
         CREATE TABLE IF NOT EXISTS users (
           id INT AUTO_INCREMENT PRIMARY KEY,
           username VARCHAR(100) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           fullname VARCHAR(255) NOT NULL,
+          role VARCHAR(50) DEFAULT 'Ứng viên',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -64,16 +65,6 @@ async function initDB() {
           applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-
-      // Tạo tài khoản mặc định kim123 / 123
-      const [existingUser] = await conn.query('SELECT * FROM users WHERE username = ?', ['kim123']);
-      if (existingUser.length === 0) {
-        await conn.query(
-          'INSERT INTO users (username, password, fullname) VALUES (?, ?, ?)',
-          ['kim123', '123', 'Sinh viên Kim (dtc245200861)']
-        );
-        console.log('Default user kim123 created!');
-      }
 
       // Thêm dữ liệu việc làm mẫu nếu bảng rỗng
       const [rows] = await conn.query('SELECT COUNT(*) as count FROM jobs');
@@ -119,12 +110,12 @@ app.get('/api/status', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ error: 'Tên đăng nhập và mật khẩu là bắt buộc' });
+    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!' });
   }
   try {
-    const [users] = await pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
+    const [users] = await pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username.trim(), password]);
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Tên đăng nhập hoặc mật khẩu không chính xác' });
+      return res.status(401).json({ error: 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!' });
     }
     const user = users[0];
     res.json({
@@ -132,29 +123,39 @@ app.post('/api/login', async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        fullname: user.fullname
+        fullname: user.fullname,
+        role: user.role
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Lỗi máy chủ: ' + err.message });
   }
 });
 
 // API Đăng ký tài khoản
 app.post('/api/register', async (req, res) => {
-  const { username, password, fullname } = req.body;
+  const { username, password, fullname, role } = req.body;
   if (!username || !password || !fullname) {
-    return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
+    return res.status(400).json({ error: 'Vui lòng điền đầy đủ các thông tin bắt buộc!' });
+  }
+  if (username.trim().length < 3) {
+    return res.status(400).json({ error: 'Tên đăng nhập phải có ít nhất 3 ký tự!' });
+  }
+  if (password.length < 3) {
+    return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 3 ký tự!' });
   }
   try {
-    const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username.trim()]);
     if (existing.length > 0) {
-      return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại trên hệ thống' });
+      return res.status(400).json({ error: 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác!' });
     }
-    await pool.query('INSERT INTO users (username, password, fullname) VALUES (?, ?, ?)', [username, password, fullname]);
-    res.json({ success: true, message: 'Đăng ký tài khoản thành công!' });
+    await pool.query(
+      'INSERT INTO users (username, password, fullname, role) VALUES (?, ?, ?, ?)',
+      [username.trim(), password, fullname.trim(), role || 'Ứng viên']
+    );
+    res.json({ success: true, message: 'Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ.' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Lỗi máy chủ: ' + err.message });
   }
 });
 
