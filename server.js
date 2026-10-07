@@ -29,6 +29,17 @@ async function initDB() {
       const conn = await pool.getConnection();
       console.log('Connected to MySQL successfully!');
 
+      // Tạo bảng users
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          username VARCHAR(100) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          fullname VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Tạo bảng jobs
       await conn.query(`
         CREATE TABLE IF NOT EXISTS jobs (
@@ -54,7 +65,17 @@ async function initDB() {
         )
       `);
 
-      // Thêm dữ liệu mẫu nếu bảng rỗng
+      // Tạo tài khoản mặc định kim123 / 123
+      const [existingUser] = await conn.query('SELECT * FROM users WHERE username = ?', ['kim123']);
+      if (existingUser.length === 0) {
+        await conn.query(
+          'INSERT INTO users (username, password, fullname) VALUES (?, ?, ?)',
+          ['kim123', '123', 'Sinh viên Kim (dtc245200861)']
+        );
+        console.log('Default user kim123 created!');
+      }
+
+      // Thêm dữ liệu việc làm mẫu nếu bảng rỗng
       const [rows] = await conn.query('SELECT COUNT(*) as count FROM jobs');
       if (rows[0].count === 0) {
         await conn.query(`
@@ -91,6 +112,49 @@ app.get('/api/status', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ status: 'Database error', error: err.message });
+  }
+});
+
+// API Đăng nhập
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Tên đăng nhập và mật khẩu là bắt buộc' });
+  }
+  try {
+    const [users] = await pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Tên đăng nhập hoặc mật khẩu không chính xác' });
+    }
+    const user = users[0];
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        fullname: user.fullname
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// API Đăng ký tài khoản
+app.post('/api/register', async (req, res) => {
+  const { username, password, fullname } = req.body;
+  if (!username || !password || !fullname) {
+    return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
+  }
+  try {
+    const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại trên hệ thống' });
+    }
+    await pool.query('INSERT INTO users (username, password, fullname) VALUES (?, ?, ?)', [username, password, fullname]);
+    res.json({ success: true, message: 'Đăng ký tài khoản thành công!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

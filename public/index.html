@@ -8,23 +8,50 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .hero-banner { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 40px 0; margin-bottom: 30px; }
+    .hero-banner { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 35px 0 25px 0; margin-bottom: 25px; }
     .job-card { border: none; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; margin-bottom: 20px; }
     .job-card:hover { transform: translateY(-3px); }
     .badge-salary { background-color: #e0f2fe; color: #0369a1; font-weight: 600; }
     .status-badge { font-size: 0.9rem; padding: 6px 14px; border-radius: 20px; }
+    .user-greeting { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; }
   </style>
 </head>
 <body>
 
   <!-- Header / Hero Banner -->
   <div class="hero-banner">
-    <div class="container text-center">
-      <h1 class="fw-bold"><i class="fa-solid fa-briefcase me-2"></i>CỔNG THÔNG TIN TUYỂN DỤNG & VIỆC LÀM</h1>
-      <p class="lead mb-2">Đề tài: Triển khai & Quản trị Hệ thống Phần mềm - Đề số 33</p>
-      <div class="d-inline-flex align-items-center bg-white text-dark px-3 py-1 rounded-pill shadow-sm">
-        <i class="fa-solid fa-user-graduate text-primary me-2"></i>
-        <span>Sinh viên thực hiện: <strong>dtc245200861</strong></span>
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-inline-flex align-items-center bg-white text-dark px-3 py-1 rounded-pill shadow-sm">
+          <i class="fa-solid fa-user-graduate text-primary me-2"></i>
+          <span>Sinh viên thực hiện: <strong>dtc245200861</strong></span>
+        </div>
+        
+        <!-- Khối Đăng Nhập / Đăng Ký Tài Khoản -->
+        <div id="authSection">
+          <div id="loggedOutButtons" class="d-flex gap-2">
+            <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập
+            </button>
+            <button class="btn btn-light btn-sm text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#registerModal">
+              <i class="fa-solid fa-user-plus me-1"></i> Đăng Ký
+            </button>
+          </div>
+          <div id="loggedInUser" class="d-none align-items-center gap-2">
+            <span class="user-greeting text-white">
+              <i class="fa-solid fa-circle-user me-1 text-warning"></i>
+              Xin chào, <strong id="currentUsername">kim123</strong>
+            </span>
+            <button class="btn btn-sm btn-outline-light" onclick="logout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <h1 class="fw-bold"><i class="fa-solid fa-briefcase me-2"></i>CỔNG THÔNG TIN TUYỂN DỤNG & VIỆC LÀM</h1>
+        <p class="lead mb-0">Đề tài: Triển khai & Quản trị Hệ thống Phần mềm - Đề số 33</p>
       </div>
     </div>
   </div>
@@ -60,6 +87,69 @@
             <p class="mt-2 text-muted">Đang tải danh sách công việc...</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Đăng Nhập -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-right-to-bracket text-primary me-2"></i>Đăng Nhập Hệ Thống</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="loginForm">
+          <div class="modal-body">
+            <div class="alert alert-info py-2 small mb-3">
+              Tài khoản mẫu: <strong>kim123</strong> | Mật khẩu: <strong>123</strong>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tên đăng nhập</label>
+              <input type="text" class="form-control" name="username" required value="kim123" placeholder="Nhập tên đăng nhập">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mật khẩu</label>
+              <input type="password" class="form-control" name="password" required value="123" placeholder="Nhập mật khẩu">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-primary">Đăng Nhập</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Đăng Ký -->
+  <div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-primary me-2"></i>Đăng Ký Tài Khoản</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="registerForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Họ và tên *</label>
+              <input type="text" class="form-control" name="fullname" required placeholder="Ví dụ: Nguyễn Văn Kim">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tên đăng nhập *</label>
+              <input type="text" class="form-control" name="username" required placeholder="Nhập tên tài khoản">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mật khẩu *</label>
+              <input type="password" class="form-control" name="password" required placeholder="Nhập mật khẩu">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-success">Tạo Tài Khoản</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -145,6 +235,75 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    function updateAuthUI() {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      const loggedOutButtons = document.getElementById('loggedOutButtons');
+      const loggedInUser = document.getElementById('loggedInUser');
+      if (user) {
+        loggedOutButtons.classList.add('d-none');
+        loggedInUser.classList.remove('d-none');
+        loggedInUser.classList.add('d-flex');
+        document.getElementById('currentUsername').innerText = user.username + ' (' + user.fullname + ')';
+      } else {
+        loggedOutButtons.classList.remove('d-none');
+        loggedInUser.classList.add('d-none');
+        loggedInUser.classList.remove('d-flex');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      updateAuthUI();
+      alert('Đã đăng xuất tài khoản thành công!');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          localStorage.setItem('currentUser', JSON.stringify(result.user));
+          bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+          updateAuthUI();
+          alert('Đăng nhập thành công! Xin chào ' + result.user.fullname);
+        } else {
+          alert('Đăng nhập thất bại: ' + result.error);
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+          alert('Đăng ký thành công! Bạn có thể dùng tài khoản này để đăng nhập.');
+          new bootstrap.Modal(document.getElementById('loginModal')).show();
+        } else {
+          alert('Đăng ký thất bại: ' + result.error);
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    });
+
     async function checkStatus() {
       const badge = document.getElementById('systemStatus');
       badge.className = 'badge bg-warning text-dark status-badge';
@@ -253,8 +412,8 @@
       return text.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     }
 
-    // Tự động kiểm tra và tải dữ liệu khi trang tải xong
     window.addEventListener('DOMContentLoaded', () => {
+      updateAuthUI();
       checkStatus();
       loadJobs();
     });
