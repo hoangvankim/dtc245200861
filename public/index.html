@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Tuyển Dụng - dtc245200861</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        h1 { color: #333; }
+        #status { margin-top: 20px; font-weight: bold; color: green; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hệ Thống Quản Lý Tin Tuyển Dụng</h1>
+        <p>Sinh viên thực hiện: <strong>dtc245200861</strong></p>
+        <button onclick="checkStatus()">Kiểm tra kết nối Database</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        function checkStatus() {
+            document.getElementById('status').innerText = "Đang kiểm tra...";
+            document.getElementById('status').style.color = "black";
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status.includes('thành công')) {
+                        document.getElementById('status').style.color = "green";
+                        document.getElementById('status').innerText = "Thành công: " + data.status;
+                    } else {
+                        document.getElementById('status').style.color = "red";
+                        document.getElementById('status').innerText = "Lỗi: " + data.error;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('status').style.color = "red";
+                    document.getElementById('status').innerText = "Lỗi kết nối API tới server.";
+                });
+        }
+    </script>
+</body>
+</html>

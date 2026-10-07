@@ -1,0 +1,52 @@
+﻿version: '3.8'
+
+services:
+  web-app:
+    build: .
+    container_name: web-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=mysql-db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=job_board
+    depends_on:
+      - mysql-db
+    networks:
+      - job-network
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=job_board
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - job-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=mysql-db
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpassword
+    depends_on:
+      - mysql-db
+    networks:
+      - job-network
+
+volumes:
+  db_data:
+
+networks:
+  job-network:
+    driver: bridge
