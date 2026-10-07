@@ -1,12 +1,11 @@
 services:
+  # --- Ứng Dụng Web Tuyển Dụng (Hardening: Non-root user) ---
   web-app:
     build: .
     container_name: web-app
     restart: always
     expose:
       - "3000"
-    ports:
-      - "3000:3000"
     environment:
       - DB_HOST=mysql-db
       - DB_USER=root
@@ -15,8 +14,10 @@ services:
     depends_on:
       - mysql-db
     networks:
-      - job-network
+      - frontend-net
+      - backend-net
 
+  # --- Cơ Sở Dữ Liệu MySQL (Hardening: Network Isolation) ---
   mysql-db:
     image: mysql:8.0
     container_name: mysql-db
@@ -27,14 +28,13 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     networks:
-      - job-network
+      - backend-net
 
+  # --- Công Cụ Quản Lý DB: phpMyAdmin ---
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     restart: always
-    expose:
-      - "80"
     ports:
       - "8080:80"
     environment:
@@ -44,8 +44,10 @@ services:
     depends_on:
       - mysql-db
     networks:
-      - job-network
+      - frontend-net
+      - backend-net
 
+  # --- Nginx Reverse Proxy (Commit 1: HTTPS & Security Headers) ---
   nginx:
     image: nginx:alpine
     container_name: nginx-proxy
@@ -56,13 +58,15 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - web-app
       - phpmyadmin
     networks:
-      - job-network
+      - frontend-net
+      - monitoring-net
 
-  # --- Monitoring Services (Commit 2) ---
+  # --- Hệ Thống Giám Sát (Commit 2: Prometheus & Grafana) ---
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx-exporter
@@ -72,7 +76,7 @@ services:
     depends_on:
       - nginx
     networks:
-      - job-network
+      - monitoring-net
 
   mysqld-exporter:
     image: prom/mysqld-exporter:latest
@@ -86,7 +90,8 @@ services:
     depends_on:
       - mysql-db
     networks:
-      - job-network
+      - backend-net
+      - monitoring-net
 
   prometheus:
     image: prom/prometheus:latest
@@ -97,7 +102,7 @@ services:
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - job-network
+      - monitoring-net
 
   grafana:
     image: grafana/grafana:latest
@@ -115,12 +120,44 @@ services:
     depends_on:
       - prometheus
     networks:
-      - job-network
+      - monitoring-net
+
+  # --- Hệ Thống Log Tập Trung (Commit 3: Loki & Promtail) ---
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: always
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./logging/loki/loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring-net
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: always
+    volumes:
+      - ./logging/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - ./logs/nginx:/var/log/nginx:ro
+      - ./logs/app:/var/log/app:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring-net
 
 volumes:
   db_data:
   grafana_data:
 
+# Hardening: Phân tách mạng (Network Isolation)
 networks:
-  job-network:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+  monitoring-net:
     driver: bridge
