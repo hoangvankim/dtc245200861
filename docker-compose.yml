@@ -62,8 +62,64 @@ services:
     networks:
       - job-network
 
+  # --- Monitoring Services (Commit 2) ---
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    restart: always
+    command:
+      - -nginx.scrape-uri=http://nginx-proxy:80/stub_status
+    depends_on:
+      - nginx
+    networks:
+      - job-network
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: mysqld-exporter
+    restart: always
+    environment:
+      - MYSQLD_EXPORTER_PASSWORD=rootpassword
+    command:
+      - "--mysqld.username=root"
+      - "--mysqld.address=mysql-db:3306"
+    depends_on:
+      - mysql-db
+    networks:
+      - job-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - job-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - job-network
+
 volumes:
   db_data:
+  grafana_data:
 
 networks:
   job-network:
